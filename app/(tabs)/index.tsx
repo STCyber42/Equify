@@ -1,75 +1,81 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from 'expo-router';
 
 export default function HomeScreen() {
+  const [favorCount, setFavorCount] = useState(0);
+  const [balanceScore, setBalanceScore] = useState(0);
+  const [insight, setInsight] = useState('');
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchFavors = async () => {
+        const data = await AsyncStorage.getItem('favors');
+        const favors = data ? JSON.parse(data) : [];
+        setFavorCount(favors.length);
+        // Dummy score: semakin banyak favor, skor turun
+        const score = Math.max(100 - favors.length * 10, 0);
+        setBalanceScore(score);
+        let insightMsg = '';
+        let emoji = '';
+        if (score > 80) {
+          insightMsg = 'Hubungan sangat seimbang, pertahankan!';
+          emoji = '🟢😊';
+        } else if (score > 60) {
+          insightMsg = 'Hubungan cukup seimbang, tetap jaga komunikasi.';
+          emoji = '🟡🙂';
+        } else if (score > 40) {
+          insightMsg = 'Mulai ada ketimpangan, perhatikan reciprocate.';
+          emoji = '🟠🤔';
+        } else if (score > 20) {
+          insightMsg = 'Hubungan kurang seimbang, lakukan aksi timbal balik!';
+          emoji = '🔴😟';
+        } else {
+          insightMsg = 'Ayo perbaiki hubungan, lakukan favor untuk menyeimbangkan!';
+          emoji = '⚫️😢';
+        }
+        setInsight(`${emoji} ${insightMsg}`);
+      };
+      fetchFavors();
+    }, [])
+  );
+
+  const isEmpty = favorCount === 0;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Dashboard Keseimbangan</Text>
+      {isEmpty ? (
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyEmoji}>🤝</Text>
+          <Text style={styles.emptyTitle}>Belum ada favor</Text>
+          <Text style={styles.emptyDesc}>Catat favor pertama Anda untuk mulai menjaga dan menyeimbangkan hubungan!</Text>
+        </View>
+      ) : (
+        <>
+          <Text style={styles.score}>Skor: {balanceScore}</Text>
+          <Text style={styles.insight}>{insight}</Text>
+          <View style={styles.summaryBox}>
+            <Text style={styles.summaryLabel}>Total Favor Dicatat:</Text>
+            <Text style={styles.summaryValue}>{favorCount}</Text>
+          </View>
+        </>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 24 },
+  score: { fontSize: 40, fontWeight: 'bold', color: '#0a7ea4', marginBottom: 16 },
+  insight: { fontSize: 16, color: '#374151', marginBottom: 32, textAlign: 'center' },
+  summaryBox: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 20, alignItems: 'center' },
+  summaryLabel: { fontSize: 16, color: '#6B7280' },
+  summaryValue: { fontSize: 28, fontWeight: 'bold', color: '#0a7ea4' },
+  emptyBox: { alignItems: 'center', marginTop: 40 },
+  emptyEmoji: { fontSize: 48, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 6, color: '#374151' },
+  emptyDesc: { fontSize: 14, color: '#6B7280', textAlign: 'center', maxWidth: 260 },
 });

@@ -40,6 +40,28 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="favorForm"
+        options={{
+          title: 'Favor',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus.circle.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="favorList"
+        options={{
+          title: 'Riwayat',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />, 
+        }}
+      />
+      {/* Tambahkan screen detail favor, tanpa tabBarIcon */}
+      <Tabs.Screen
+        name="favorDetail"
+        options={{
+          title: 'Detail Favor',
+          tabBarButton: () => null, // Sembunyikan dari tab bar
+        }}
+      />
     </Tabs>
   );
 }
